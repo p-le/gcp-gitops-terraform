@@ -8,7 +8,7 @@ resource "google_cloudbuild_trigger" "gcp_gitops_terraform_push_trigger" {
 
   github {
     owner = "p-le"
-    name = "https://github.com/p-le/gcp-gitops-terraform"
+    name = "gcp-gitops-terraform"
     push {
       branch = ".*"
     }
