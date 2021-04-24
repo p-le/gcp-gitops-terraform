@@ -16,6 +16,9 @@ setup:
 	@gsutil cp gs://phu-le-credentials/${SERVICE_ACCOUNT_FILE} gcloud/certs/
 	@echo "[core]\nproject = phu-le-it" > ./gcloud/config/configurations/config_default
 	@echo "[auth]\ncredential_file_override = /certs/${SERVICE_ACCOUNT_FILE}" >> ./gcloud/config/configurations/config_default
+	$(MAKE) iam-init
+	$(MAKE) env-dev-init
+	$(MAKE) env-prod-init
 
 #### IAM Rules
 .PHONY: iam-init
@@ -44,7 +47,7 @@ WORKDIR = /terraform/cloudbuild
 cloudbuild-init:
 	${TERRAFORM_PREFIX} init
 
-.PHONY: iam-plan
+.PHONY: cloudbuild-plan
 WORKDIR = /terraform/cloudbuild
 cloudbuild-plan:
 	${TERRAFORM_PREFIX} plan
@@ -59,101 +62,47 @@ WORKDIR = /terraform/cloudbuild
 cloudbuild-destroy:
 	${TERRAFORM_PREFIX} destroy
 
-#### Environment Dev Rules
-.PHONY: init-dev
-init-dev:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/dev \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		init
+#### Environment DEV Rules
+.PHONY: env-dev-init
+WORKDIR = /terraform/environments/dev
+env-dev-init:
+	${TERRAFORM_PREFIX} init
 
-.PHONY: plan-dev
-plan-dev:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/dev \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		plan
+.PHONY: env-dev-plan
+WORKDIR = /terraform/environments/dev
+env-dev-plan:
+	${TERRAFORM_PREFIX} plan
 
+.PHONY: env-dev-apply
+WORKDIR = /terraform/environments/dev
+env-dev-apply:
+	${TERRAFORM_PREFIX} apply
 
-.PHONY: apply-dev
-apply-dev:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/dev \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		apply
+.PHONY: env-dev-destroy
+WORKDIR = /terraform/environments/dev
+env-dev-destroy:
+	${TERRAFORM_PREFIX} destroy
 
+#### Environment PROD Rules
+.PHONY: env-prod-init
+WORKDIR = /terraform/environments/prod
+env-prod-init:
+	${TERRAFORM_PREFIX} init
 
-.PHONY: destroy-dev
-destroy-dev:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/dev \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		destroy
+.PHONY: env-prod-plan
+env-prod-plan:
+	${TERRAFORM_PREFIX} plan
+
+.PHONY: env-prod-apply
+env-prod-apply:
+	${TERRAFORM_PREFIX} apply
+
+.PHONY: env-prod-destroy
+env-prod-destroy:
+	${TERRAFORM_PREFIX} destroy
 
 
-.PHONY: init-prod
-init-prod:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/prod \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		init
-
-
-.PHONY: plan-prod
-plan-prod:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/prod \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		plan
-
-
-.PHONY: apply-prod
-apply-prod:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/prod \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		apply
-
-
-.PHONY: destroy-prod
-destroy-prod:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-v ${BASE_PATH}/gcloud/certs:/certs \
-		-e GOOGLE_CREDENTIALS=/certs/${SERVICE_ACCOUNT_FILE} \
-		-w /terraform/environments/prod \
-		hashicorp/terraform:${TERRAFORM_VERSION} \
-		destroy
-
-.PHONY: plan
-plan:
-	@docker container run -it --rm \
-		-v ${BASE_PATH}/terraform:/terraform \
-		-w /terraform \
-		hashicorp/terraform:0.15.0 \
-		plan
-
+#### Others Rules
 
 # Example 1: make gcloud ARG=version
 # Example 2: make gcloud ARG="config list"
